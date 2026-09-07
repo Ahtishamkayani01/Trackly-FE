@@ -1,0 +1,10 @@
+<svg width="360" height="100" viewBox="0 0 360 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon: rounded square with ascending track/checkmark bars -->
+  <rect x="8" y="8" width="84" height="84" rx="20" fill="#185FA5"/>
+  <rect x="26" y="58" width="12" height="18" rx="3" fill="#FFFFFF"/>
+  <rect x="44" y="46" width="12" height="30" rx="3" fill="#FFFFFF"/>
+  <rect x="62" y="30" width="12" height="46" rx="3" fill="#FFFFFF"/>
+
+  <!-- Wordmark -->
+  <text x="112" y="64" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#0C2340" letter-spacing="0.5">Trackly</text>
+</svg>
