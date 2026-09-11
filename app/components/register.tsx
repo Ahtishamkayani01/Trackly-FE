@@ -1,26 +1,46 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Input from "./ui/input";
-interface RegisterFormProps {
-  // Define any props if needed
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-}
+import { useSignupMutation } from "../store/authApiSlice";
+import { useGuestGuard } from "../hooks/useAuthGuard";
+
 export default function RegisterForm() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter();
+  const { isChecking } = useGuestGuard();
+  const [signup, { isLoading, error }] = useSignupMutation();
+  const [formError, setFormError] = useState<string | null>(null);
+
+  if (isChecking) {
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
 
     const formData = new FormData(e.currentTarget);
-    const data = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-      confirmPassword: formData.get("confirmPassword"),
-    };
-    console.log(data);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
 
+    if (password !== confirmPassword) {
+      setFormError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const result = await signup({ name, email, password }).unwrap();
+      if (!result.success) {
+        setFormError(result.message || "Something went wrong. Please try again.");
+        return;
+      }
+      router.push("/dashboard");
+    } catch {
+      // error is available via the `error` field from useSignupMutation
+    }
   };
 
   return (
@@ -122,11 +142,18 @@ export default function RegisterForm() {
               </span>
             </label>
 
+            {(formError || error) && (
+              <p className="text-sm text-red-600 dark:text-red-500">
+                {formError || "Something went wrong. Please try again."}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full py-2 px-3.5 text-sm rounded-md font-semibold cursor-pointer tracking-wide text-white border border-blue-600 bg-blue-600 hover:bg-blue-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              disabled={isLoading}
+              className="w-full py-2 px-3.5 text-sm rounded-md font-semibold cursor-pointer tracking-wide text-white border border-blue-600 bg-blue-600 hover:bg-blue-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Create account
+              {isLoading ? "Creating account..." : "Create account"}
             </button>
           </form>
 

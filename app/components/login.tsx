@@ -1,8 +1,41 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Input from "./ui/input";
+import { useLoginMutation } from "../store/authApiSlice";
+import { useGuestGuard } from "../hooks/useAuthGuard";
 
 export default function LoginForm() {
+  const router = useRouter();
+  const { isChecking } = useGuestGuard();
+  const [login, { isLoading, error }] = useLoginMutation();
+  const [formError, setFormError] = useState<string | null>(null);
+
+  if (isChecking) {
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFormError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const result = await login({ email, password }).unwrap();
+      if (!result.success) {
+        setFormError(result.message || "Invalid credentials.");
+        return;
+      }
+      router.push("/dashboard");
+    } catch {
+      // error is available via the `error` field from useLoginMutation
+    }
+  };
+
   return (
     <main className="px-4 md:px-8 w-full flex m-auto flex-col items-center justify-center">
       <div className="py-4 max-w-md w-full">
@@ -25,7 +58,7 @@ export default function LoginForm() {
             </p>
           </div>
 
-          <form className="space-y-6 mt-10">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-10">
             <Input
               label="Email"
               type="email"
@@ -50,7 +83,6 @@ export default function LoginForm() {
                   id="remember"
                   name="remember"
                   type="checkbox"
-                  required
                   className="sr-only"
                 />
                 {/* Custom box */}
@@ -87,11 +119,18 @@ export default function LoginForm() {
               </a>
             </div>
 
+            {(formError || error) && (
+              <p className="text-sm text-red-600 dark:text-red-500">
+                {formError || "Something went wrong. Please try again."}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full py-2 px-3.5 text-sm rounded-md font-semibold cursor-pointer tracking-wide text-white border border-blue-600 bg-blue-600 hover:bg-blue-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              disabled={isLoading}
+              className="w-full py-2 px-3.5 text-sm rounded-md font-semibold cursor-pointer tracking-wide text-white border border-blue-600 bg-blue-600 hover:bg-blue-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Sign in
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
